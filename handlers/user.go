@@ -1,48 +1,49 @@
 package handlers
 
 import (
-	"fmt"
+	"goapi/config"
 	"goapi/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-var users = []models.User{
-	{ID: 1, Name: "Alice", Email: "alice@example.com", Age: 30},
-	{ID: 2, Name: "Bob", Email: "bob@example.com", Age: 25},
-}
-
 func GetUsers(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": users,
-	})
+	var users []models.User
+	config.DB.Find(&users)
+	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
 func GetUser(c *gin.Context) {
-	id := c.Param("id")
-	fmt.Println("Received ID:", id)
-	fmt.Printf("ID type checkd %s", id)
+	var users []models.User
 
-	for _, user := range users {
-		if fmt.Sprintf("%d", user.ID) == id {
-			c.JSON(http.StatusOK, gin.H{"data": user})
-			return
-		}
+	id := c.Param("id")
+
+	if err := config.DB.First(&users, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"error": "User not Found"})
+	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
 func CreateUser(c *gin.Context) {
-	var newUser models.User
+	var req models.CreateUserRequest
 
-	if err := c.ShouldBindJSON(&newUser); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user := models.User{
+		Name:  req.Name,
+		Email: req.Email,
+		Age:   req.Age,
 	}
 
-	newUser.ID = uint(len(users) + 1)
-	users = append(users, newUser)
+	config.DB.Create(&user)
 
-	c.JSON(http.StatusCreated, gin.H{"data": newUser})
+	c.JSON(http.StatusCreated, models.UserResponse{
+		ID:   user.ID,
+		Name: user.Name,
+	})
 }

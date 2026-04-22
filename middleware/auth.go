@@ -8,10 +8,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte("your-secret-key") //secret key
+var secretKey = []byte("Dachi1234") //secret key
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		//get the authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -44,5 +45,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		c.Next()
+
 	}
+
 }

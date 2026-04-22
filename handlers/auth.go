@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte("your-secret-key")
+var secretKey = []byte("Dachi1234")
 
 var fakeUsers = map[string]string{
 	"alice@example.com": "password123@",
