@@ -12,6 +12,7 @@ func SetupRouters(r *gin.Engine) {
 
 	r.POST("/api/v1/register", handlers.Register)
 	r.POST("/api/v1/login", handlers.Login)
+	r.GET("/api/v1/verify", handlers.VerifyEmail)
 
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware())

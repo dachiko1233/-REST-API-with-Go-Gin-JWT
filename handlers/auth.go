@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"goapi/config"
 	"goapi/models"
+	"goapi/utils"
 	"net/http"
 	"time"
 
@@ -68,11 +70,17 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	//generate verification token
+
+	token := fmt.Sprintf("%d", time.Now().UnixNano())
+
 	user := models.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Age:      req.Age,
+		Name:              req.Name,
+		Email:             req.Email,
+		Password:          string(hashedPassword),
+		Age:               req.Age,
+		IsVerified:        false,
+		VerificationToken: token,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -80,11 +88,22 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, models.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+	//send verification email
+
+	if err := utils.SendVerificationEmail(user.Email, token); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not send verification email"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Registration successful! Please check your email to verify your account.",
 	})
+
+	// c.JSON(http.StatusCreated, models.UserResponse{
+	// 	ID:    user.ID,
+	// 	Name:  user.Name,
+	// 	Email: user.Email,
+	// })
 
 }
 
@@ -120,6 +139,30 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	if !user.IsVerified {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Please verify your email"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+
+}
+
+func VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+
+	var user models.User
+
+	if err := config.DB.Where("verification_token = ?", token).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid verification token"})
+		return
+	}
+
+	config.DB.Model(&user).Updates(map[string]interface{}{
+		"is_verified":        true,
+		"verification_token": "",
+	})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email verified seccessfully! You can now login"})
 
 }
