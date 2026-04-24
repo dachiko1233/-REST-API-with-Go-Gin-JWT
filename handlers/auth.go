@@ -6,6 +6,7 @@ import (
 	"goapi/models"
 	"goapi/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -165,4 +166,24 @@ func VerifyEmail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified seccessfully! You can now login"})
 
+}
+
+func Logout(c *gin.Context) {
+	//get token from handler
+
+	authHeader := c.GetHeader("Authorization")
+	parts := strings.Split(authHeader, " ")
+	tokenString := parts[1]
+
+	//save token to blacklist
+	blacklisted := models.BlacklistedToken{
+		Token: tokenString,
+	}
+
+	if err := config.DB.Create(&blacklisted).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not lngout"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully!"})
 }

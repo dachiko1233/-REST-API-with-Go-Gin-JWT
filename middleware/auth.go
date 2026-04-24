@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"goapi/config"
+	"goapi/models"
 	"net/http"
 	"strings"
 
@@ -45,6 +47,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		c.Next()
+
+		var blacklisted models.BlacklistedToken
+		if err := config.DB.Where("token = ?", tokenString).First(&blacklisted).Error; err == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has benn invalidated, please login again"})
+
+			c.Abort()
+			return
+		}
 
 	}
 

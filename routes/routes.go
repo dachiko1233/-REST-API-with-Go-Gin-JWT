@@ -21,5 +21,6 @@ func SetupRouters(r *gin.Engine) {
 		api.GET("/users", handlers.GetUsers)
 		api.GET("/users/:id", handlers.GetUser)
 		api.POST("/users", handlers.CreateUser)
+		api.POST("/logout", handlers.Logout)
 	}
 }

@@ -29,3 +29,8 @@ type UserResponse struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
+
+type BlacklistedToken struct {
+	gorm.Model
+	Token string `gorm:"unique"`
+}
