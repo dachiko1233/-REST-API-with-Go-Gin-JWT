@@ -1,16 +1,21 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 
-function App() {
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-blue-600">
-          GoAPI Frontend 🚀
-        </h1>
-        <p className="text-gray-500 mt-2">Connected to Go + Gin backend</p>
-      </div>
-    </div>
+export function App(){
+  return(
+    <AuthProvider>
+      <BrowserRouter>
+      <Routes>
+        
+        <Route path="/login" element={<Login/>}   /> 
+        <Route path="/register" element={<Register/>} />
+        {/* <Route path="/dashboard" element={<Dashboard/>} />  */}
+
+      </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
-
-export default App
