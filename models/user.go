@@ -34,3 +34,10 @@ type BlacklistedToken struct {
 	gorm.Model
 	Token string `gorm:"unique"`
 }
+
+type RefreshToken struct {
+	gorm.Model
+	UserID    uint   `json:"user_id"`
+	Token     string `json:"token" gorm:"unique"`
+	ExpiresAt int64  `json:"expires_at"`
+}

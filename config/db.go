@@ -23,6 +23,7 @@ func ConnectDB() {
 
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.User{}, &models.BlacklistedToken{})
+	db.AutoMigrate(&models.User{}, &models.BlacklistedToken{}, &models.RefreshToken{})
 
 	log.Println("Database connected successfully! ")
 	DB = db

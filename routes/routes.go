@@ -10,9 +10,10 @@ import (
 func SetupRouters(r *gin.Engine) {
 	r.Use(middleware.Logger())
 
-	r.POST("/api/v1/register", handlers.Register)
-	r.POST("/api/v1/login", handlers.Login)
+	r.POST("/api/v1/register", middleware.RateLimiter(), handlers.Register)
+	r.POST("/api/v1/login", middleware.RateLimiter(), handlers.Login)
 	r.GET("/api/v1/verify", handlers.VerifyEmail)
+	r.POST("/api/v1/refresh", handlers.RefreshToken)
 
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware())

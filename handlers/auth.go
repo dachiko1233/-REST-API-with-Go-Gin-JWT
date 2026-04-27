@@ -16,46 +16,6 @@ import (
 
 var secretKey = []byte("Dachi1234")
 
-var fakeUsers = map[string]string{
-	"alice@example.com": "password123@",
-	"bob@example.com":   "password456",
-}
-
-func Loggin(c *gin.Context) {
-	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
-
-	//if users password mach
-
-	pass, exists := fakeUsers[body.Email]
-	if !exists || pass != body.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentals"})
-		return
-	}
-
-	//generate JWT token
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": body.Email,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
-	})
-
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
-}
-
 func Register(c *gin.Context) {
 	var req models.CreateUserRequest
 
@@ -131,7 +91,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": user.Email,
 		"id":    user.ID,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"exp":   time.Now().Add(15 * time.Minute).Unix(),
 	})
 
 	tokenString, err := token.SignedString(secretKey)
@@ -145,7 +105,17 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	//Generate Refresh
+	refreshTokenString := fmt.Sprintf("%d-%d", user.ID, time.Now().UnixNano())
+
+	refreshToken := models.RefreshToken{
+		UserID:    user.ID,
+		Token:     refreshTokenString,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour).Unix(),
+	}
+
+	config.DB.Create(&refreshToken)
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "refresh_token": refreshTokenString, "expires_in": 900})
 
 }
 
@@ -186,4 +156,51 @@ func Logout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully!"})
+}
+
+func RefreshToken(c *gin.Context) {
+	var body struct {
+		ResponseToken string `json:"refresh_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//find refresh token in DB
+	var refreshToken models.RefreshToken
+	if err := config.DB.Where("token = ?", body.ResponseToken).First(&refreshToken).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		return
+	}
+
+	//Check if expered
+	if time.Now().Unix() > refreshToken.ExpiresAt {
+		config.DB.Delete(&refreshToken)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token expired, please login again"})
+		return
+	}
+
+	//find user
+	var user models.User
+	config.DB.First(&user, refreshToken.UserID)
+	//Generate new Access tokken
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": user.Email,
+		"id":    user.ID,
+		"exp":   time.Now().Add(15 * time.Minute).Unix(),
+	})
+
+	accessTokenString, err := accessToken.SignedString(secretKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": accessTokenString,
+		"expires_in":   900,
+	})
+
 }
