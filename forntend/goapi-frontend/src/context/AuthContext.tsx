@@ -7,7 +7,7 @@ interface AuthContextType{
     isAuthenticated: boolean
 }
 
-const AuthContext = createContext <AuthContextType | null >(null)
+const AuthContext = createContext <AuthContextType | null>(null)
 
 export function AuthProvider ({children} : {children: ReactNode}){
     const [token, setToken] = useState <string | null>(
@@ -15,7 +15,7 @@ export function AuthProvider ({children} : {children: ReactNode}){
     )
 
 
-    const login = (accesToken :string, refreshToken: string) =>{
+    const login = (accesToken: string, refreshToken: string) =>{
         localStorage.setItem("access_token", accesToken)
         localStorage.setItem("refresh_token", refreshToken)
 
@@ -24,9 +24,7 @@ export function AuthProvider ({children} : {children: ReactNode}){
 
     const logout = () => {
         localStorage.removeItem(`access_token`)
-
         localStorage.removeItem(`refresh_token`)
-
         setToken(null)
     }
 

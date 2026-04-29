@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 export function App(){
   return(
@@ -12,7 +13,7 @@ export function App(){
         
         <Route path="/login" element={<Login/>}   /> 
         <Route path="/register" element={<Register/>} />
-        {/* <Route path="/dashboard" element={<Dashboard/>} />  */}
+        <Route path="/dashboard" element={<Dashboard/>} /> 
 
       </Routes>
       </BrowserRouter>
