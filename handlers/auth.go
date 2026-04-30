@@ -44,8 +44,14 @@ func Register(c *gin.Context) {
 		VerificationToken: token,
 	}
 
-	if err := config.DB.Create(&user).Error; err != nil {
+	var existing models.User
+	if err := config.DB.Where("email = ?", req.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+		return
+	}
+
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
 		return
 	}
 
@@ -83,7 +89,12 @@ func Login(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credenttials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	if !user.IsVerified {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Please verify your email"})
 		return
 	}
 
@@ -97,11 +108,6 @@ func Login(c *gin.Context) {
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
-		return
-	}
-
-	if !user.IsVerified {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Please verify your email"})
 		return
 	}
 
@@ -129,12 +135,14 @@ func VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	config.DB.Model(&user).Updates(map[string]interface{}{
-		"is_verified":        true,
-		"verification_token": "",
-	})
+	if user.IsVerified {
+		c.JSON(http.StatusOK, gin.H{"message": "Email already verified! You can now login."})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully! You can now login"})
+	config.DB.Model(&user).Update("is_verified", true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully! You can now login."})
 
 }
 

@@ -27,6 +27,19 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
+func DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+
+	var user models.User
+	if err := config.DB.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	config.DB.Delete(&user)
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
 func CreateUser(c *gin.Context) {
 	var req models.CreateUserRequest
 

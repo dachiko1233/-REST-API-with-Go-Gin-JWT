@@ -15,7 +15,7 @@ func SendVerificationEmail(toEmail, token string) error {
 	fmt.Println("Password length:", len(password))
 
 	subject := "Verify you email"
-	link := fmt.Sprintf("http://localhost:8080/api/v1/verify?token=%s", token)
+	link := fmt.Sprintf("http://localhost:5173/verify?token=%s", token)
 	body := fmt.Sprintf("Click this likn to verify you email:\n\n%s", link)
 
 	message := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", form, toEmail, subject, body)

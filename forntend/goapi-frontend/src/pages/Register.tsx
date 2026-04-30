@@ -20,6 +20,7 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       await register({
@@ -30,12 +31,12 @@ export default function Register() {
       });
 
       setSuccess(
-        'Registration seccessful! Check you email to verify you account.',
+        'Registration successful! Check your email to verify your account.',
       );
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       console.log('Error:', error.response?.data);
-      setError(error.response?.data?.error || 'somthing went wrong');
+      setError(error.response?.data?.error || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -44,7 +45,7 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-b">
+        <h1 className="text-3xl font-bold text-center text-blue-600">
           Create Account
         </h1>
 
@@ -64,7 +65,7 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm front-medum text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
             </label>
 
@@ -119,9 +120,9 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-ld font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : 'Regiter'}
+            {loading ? 'Creating account...' : 'Register'}
           </button>
         </form>
 

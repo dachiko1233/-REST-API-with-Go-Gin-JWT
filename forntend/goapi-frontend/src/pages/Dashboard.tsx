@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
-import { getUsers, logout } from '../services/api';
+import { getUsers, logout, deleteUser } from '../services/api';
 
 interface User {
   ID: number;
-  Name: string;
-  Email: string;
-  Age: number;
+  name: string;
+  email: string;
+  age: number;
 }
 
 export default function Dashboard() {
@@ -16,6 +16,7 @@ export default function Dashboard() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -37,6 +38,18 @@ export default function Dashboard() {
 
     loadUsers();
   }, [isAuthenticated, navigate]);
+
+  const handleDelete = async (id: number) => {
+    setDeletingId(id);
+    try {
+      await deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.ID !== id));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -69,13 +82,22 @@ export default function Dashboard() {
                 className="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between"
               >
                 <div>
-                  <p className="font-medium text-gray-800">{user.Name}</p>
-                  <p className="text-sm text-gray-500">{user.Email}</p>
+                  <p className="font-medium text-gray-800">{user.name}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
 
-                <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">
-                  Age: {user.Age}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">
+                    Age: {user.age}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(user.ID)}
+                    disabled={deletingId === user.ID}
+                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition disabled:opacity-50"
+                  >
+                    {deletingId === user.ID ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

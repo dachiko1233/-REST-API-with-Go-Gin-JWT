@@ -22,6 +22,7 @@ func SetupRouters(r *gin.Engine) {
 		api.GET("/users", handlers.GetUsers)
 		api.GET("/users/:id", handlers.GetUser)
 		api.POST("/users", handlers.CreateUser)
+		api.DELETE("/users/:id", handlers.DeleteUser)
 		api.POST("/logout", handlers.Logout)
 	}
 }
