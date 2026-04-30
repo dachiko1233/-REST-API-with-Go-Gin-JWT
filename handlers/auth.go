@@ -134,7 +134,7 @@ func VerifyEmail(c *gin.Context) {
 		"verification_token": "",
 	})
 
-	c.JSON(http.StatusOK, gin.H{"message": "Email verified seccessfully! You can now login"})
+	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully! You can now login"})
 
 }
 
@@ -151,7 +151,7 @@ func Logout(c *gin.Context) {
 	}
 
 	if err := config.DB.Create(&blacklisted).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not lngout"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not logout"})
 		return
 	}
 
